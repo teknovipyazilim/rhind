@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>Ahmes-textil Frontend</name>
+    <code>ahmes</code>
+    <version>0.01</version>
+    <author>ahmethamdibayrak@hotmail.com</author>
+    <link>http://teknovip.net</link>
+    <file path="system/library/cart/cart.php">
+		<operation error="skip">
+            <search><![CDATA[
+            public function getProducts()
+            ]]></search>
+            <add position="replace"><![CDATA[
+            public function getProducts($cart=false)
+            ]]></add>
+        </operation>
+        <operation error="skip">
+            <search><![CDATA[
+            foreach ($cart_query->rows as $cart)
+            ]]></search>
+            <add position="replace"><![CDATA[
+
+            if($cart) $cart_query->rows = array($cart);
+           
+            foreach ($cart_query->rows as $cart)
+            ]]></add>
+        </operation>
+        <operation error="skip">
+            <search><![CDATA[
+            foreach (json_decode($cart['option']) as $product_option_id => $value) {
+            ]]></search>
+            <add position="replace"><![CDATA[
+
+           		$options = array();
+            	foreach (json_decode($cart['option']) as $product_option_id => $value) {
+            ]]></add>
+        </operation>
+        <operation error="skip">
+            <search><![CDATA[
+            $option_query->row['type'] == 'text'
+            ]]></search>
+            <add position="replace"><![CDATA[
+            $option_query->row['type'] == 'text' || $option_query->row['type'] == 'slider'
+            ]]></add>
+        </operation>
+        <operation error="skip">
+            <search><![CDATA[
+            $price = $product_query->row['price'];
+            ]]></search>
+            <add position="replace"><![CDATA[
+            $price = $this->ahmes($product_query->row, $option_data); 
+            ]]></add>
+        </operation>
+        <operation error="skip">
+            <search><![CDATA[
+            public function add(
+            ]]></search>
+            <add position="replace"><![CDATA[
+            private function ahmes($product, $option_data)
+            {
+
+				$sql = "SELECT * FROM `" . DB_PREFIX . "formulas` WHERE `id`=".(int)$product['formula'];
+				$query = $this->db->query($sql);
+				if($query->num_rows)
+				{
+					$query->row['formula'] = unserialize($query->row['formula']);
+
+					if(isset($query->row['formula'][$this->session->data['language']]) && $query->row['status'])
+					{
+						$formula = strtolower(trim($query->row['formula'][$this->session->data['language']]));
+					} else {
+						$formula = '';
+					}
+				}
+
+            	$toplas = explode('+', $formula);
+            	$result = false;
+            	foreach($toplas as $topla)
+            	{
+            		$carps = explode('*', trim($topla));
+            		
+            		foreach($carps as $carp)
+            		{
+            			foreach($option_data as $option)
+            			{
+            				//echo strtolower($option['name'])."==$carp<br>";
+            				if(strtolower($option['name'])==$carp )
+            				{
+            					//echo "$bucarpim*".$option['value']."=";
+            					if(isset($bucarpim ))
+            					{
+									$bucarpim = $bucarpim*$option['value'];
+            					} else {
+									$bucarpim = $option['value'];
+            					}
+            					//echo "$bucarpim<br>";
+            				}
+            			}
+            			if(is_numeric($carp))
+            			{
+             				//echo "$bucarpim*".$carp."=";
+  
+             					if(isset($bucarpim ))
+            					{
+									$bucarpim = $bucarpim*$carp;
+            					} else {
+									$bucarpim =$carp;
+            					}
+            				//echo "$bucarpim<br>";
+             			}
+            		}       		
+            		if(isset($bucarpim))$result += $bucarpim;
+            		unset($bucarpim);
+            	}
+            	//
+            	//echo $result.'***';
+           	    //die();
+				if(!$result)
+				{
+					return $product['price'];
+				} else {
+					return     $result;  					
+				}
+
+            }
+            public function add(
+            ]]></add>
+        </operation>
+
+
+    </file> 
+    <file path="catalog/controller/product/product.php">
+        <operation error="skip">
+            <search><![CDATA[
+            $data['options'][] = array(
+            ]]></search>
+            <add position="replace"><![CDATA[ 
+            	$parts = explode('|', $option['value'].'|100|10|50');          	
+            	$slidevalues['min']=(int)$parts[0];
+            	$slidevalues['max']=(int)$parts[1];
+            	$slidevalues['step']=(int)$parts[2];
+            	$slidevalues['value']=(int)$parts[3];
+            	$data['options'][] = array(
+            ]]></add>
+        </operation>
+        
+        <operation error="skip">
+            <search><![CDATA[
+            'value'                => $option['value'],
+            ]]></search>
+            <add position="replace"><![CDATA[
+                       
+            'slidevalues'          => $slidevalues,
+            'value'                => $option['value'],
+            ]]></add>
+        </operation>
+        
+        <operation error="skip">
+            <search><![CDATA[
+            $this->response->setOutput($this->load->view('product/product', $data));
+            ]]></search>
+            <add position="replace"><![CDATA[           
+            $this->response->setOutput($this->load->view('ahmes/ahmes_product', $data));
+            ]]></add>
+        </operation>
+        
+    </file> 
+    <file path="catalog/controller/common/header.php">
+        <operation error="skip">
+            <search><![CDATA[
+            $data['styles'] = $this->document->getStyles();
+            ]]></search>
+            <add position="replace"><![CDATA[           
+            $this->document->addStyle('catalog/view/theme/default/stylesheet/ahmes.css');
+            $data['styles'] = $this->document->getStyles();
+            ]]></add>
+        </operation>
+    </file> 
+    <file path="catalog/controller/common/footer.php">
+        <operation error="skip">
+            <search><![CDATA[
+            $data['scripts'] = $this->document->getScripts('footer');
+            ]]></search>
+            <add position="replace"><![CDATA[           
+            $this->document->addScript('catalog/view/javascript/ahmes/value-slider/jquery-ui.min.js');
+            $this->document->addScript('catalog/view/javascript/ahmes/ahmes.js');
+            $data['scripts'] = $this->document->getScripts('footer');
+            ]]></add>
+        </operation>
+    </file> 
+</modification>

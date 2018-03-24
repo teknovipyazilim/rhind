@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>Ahmes-textil Admin</name>
+    <code>ahmes</code>
+    <version>0.01</version>
+    <author>ahmethamdibayrak@hotmail.com</author>
+    <link>http://teknovip.net</link>
+    <file path="admin/controller/common/column_left.php">
+        <operation error="skip">
+            <search><![CDATA[
+            $marketplace = array();
+            ]]></search>
+            <add position="replace"><![CDATA[
+             $ahmes[] = array(
+					'name'	   => $this->language->get('ahmes_formulas'),
+					'href'     => $this->url->link('ahmes/formulas', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()		
+				);		
+             $ahmes[] = array(
+					'name'	   => $this->language->get('ahmes_setup'),
+					'href'     => $this->url->link('ahmes/setup', 'user_token=' . $this->session->data['user_token'], true),
+					'children' => array()		
+				);		
+				$data['menus'][] = array(
+					'id'       => 'menu-ahmes',
+					'icon'	   => 'fa-tags', 
+					'name'	   => $this->language->get('ahmes'),
+					'href'     => '',
+					'children' => $ahmes
+				);		
+
+            $marketplace = array();
+            ]]></add>
+        </operation>
+    </file> 
+    <file path="admin/controller/catalog/product.php">
+        <operation error="skip">
+            <search><![CDATA[
+            if (isset($this->request->post['image'])) {
+            ]]></search>
+            <add position="replace"><![CDATA[
+			$this->load->model('ahmes/formulas');
+			if (isset($this->request->post['formula'])) {
+				$data['formula'] = $this->request->post['formula'];
+			} elseif (!empty($product_info)) {
+				$data['formula'] = $this->model_ahmes_formulas->getFormula($product_info['formula']);
+			} else {
+				$data['formula'] = array();
+			}
+
+            $data['formulas'] = $this->model_ahmes_formulas->getFormulas();
+            $data['href_formulas'] = $this->url->link('ahmes/formulas', 'user_token=' . $this->session->data['user_token'], true);
+
+            if (isset($this->request->post['image'])) {
+            ]]></add>
+        </operation>
+    </file> 
+    <file path="admin/model/catalog/product.php">
+        <operation error="skip">
+            <search><![CDATA[
+             if (isset($data['image'])) {
+            ]]></search>
+            <add position="replace"><![CDATA[
+			if (isset($data['formula'])) {
+				$this->db->query("UPDATE " . DB_PREFIX . "product SET formula = '" . $this->db->escape($data['formula']) . "' WHERE product_id = '" . (int)$product_id . "'");
+            }
+
+            if (isset($data['image'])) {
+            ]]></add>
+        </operation>
+    </file> 
+    <file path="admin/view/template/catalog/option_form.twig">
+        <operation error="skip">
+            <search><![CDATA[
+             {% if type == 'text' %}
+            ]]></search>
+            <add position="replace"><![CDATA[
+                {% if type == 'slider' %}
+                  <option value="slider" selected="selected">Value Slider</option>
+                {% else %} 
+                  <option value="slider">Value Slider</option>
+                {% endif %}
+                {% if type == 'text' %}
+            ]]></add>
+        </operation>
+    </file> 
+    <file path="admin/view/template/catalog/product_form.twig">
+        <operation error="skip">
+            <search><![CDATA[
+             <div class="tab-pane" id="tab-option">
+            ]]></search>
+            <add position="replace"><![CDATA[
+			<div class="tab-pane" id="tab-option">
+<div class="tab-pane active" id="tab-data">
+  
+              <div class="form-group required">
+                <label class="col-sm-2 control-label" for="input-model">Formula</label>
+                <div class="col-sm-10">
+ <select name="formula" id="input-formula" class="form-control">
+	<option></option>
+                {% if formulas %}
+                {% for row in formulas %}
+	<option value="{{row.id}}" {%if row.id==formula.id %} selected {% endif %}>{{row.name}}</option>
+                {% endfor %}
+                {% endif %}
+</select>                 
+<i class="fa fa-info-circle"></i>
+              {% for k,f in formula.formula %} 
+                 Formula: <img src="language/{{ k }}/{{ k }}.png"  /> <code>{{f}}</code> 
+                {% endfor %}
+                <br><a class="text-success" href="{{ href_formulas }}" target="_blank">Formül Tanımlama</a>                       
+                
+                </div>
+			 </div>
+</div>
+             <hr>
+              ]]></add>
+        </operation>
+        <operation error="skip">
+            <search><![CDATA[
+             {% if product_option.type == 'text' %}
+            ]]></search>
+            <add position="replace"><![CDATA[
+                      {% if product_option.type == 'slider' %}
+                      <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-value{{ option_row }}">{{ entry_option_value }}</label>
+                        <div class="col-sm-10">
+                          <input type="text" name="product_option[{{ option_row }}][value]" value="{{ product_option.value }}" placeholder="{{ entry_option_value }}" id="input-value{{ option_row }}" class="form-control" />
+                        </div>
+                      </div>
+                      {% endif %}             
+					{% if product_option.type == 'text' %}
+              ]]></add>
+        </operation>
+    </file> 
+</modification>
